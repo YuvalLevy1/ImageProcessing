@@ -25,11 +25,15 @@ class Window:
             self.draw_button(button)
 
 
+def shout():
+    print("I am pressed")
+
+
 def main():
     window = Window((1920, 1080))
-    button1 = Button(0, 0, 100, 50, (100, 100, 100), "fudge")
-    button2 = Button(900, 400, 100, 50, (100, 100, 100), "fudge1")
-    button3 = Button(400, 800, 100, 50, (100, 100, 100), "fudge2")
+    button1 = Button(0, 0, 100, 50, (100, 100, 100), "fudge", shout)
+    button2 = Button(900, 400, 100, 50, (100, 100, 100), "fudge1", shout)
+    button3 = Button(400, 800, 100, 50, (100, 100, 100), "fudge2", shout)
     window.add_button(button1)
     window.add_button(button2)
     window.add_button(button3)
@@ -41,7 +45,7 @@ def main():
             for button in window.buttons:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if button.is_mouse_on_button(pygame.mouse.get_pos()):
-                        print("button is pressed")
+                        button.function()
 
 
 if __name__ == '__main__':
