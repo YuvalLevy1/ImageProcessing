@@ -6,8 +6,10 @@ class Camera:
     def __init__(self, port):
         self.port = port
         self.src = VideoStream(src=port + cv2.CAP_DSHOW)
+        self.__start()
+        self.size = list(self.get_image_bgr().shape)[:2]
 
-    def start(self):
+    def __start(self):
         self.src.start()
 
     def get_image_bgr(self):
