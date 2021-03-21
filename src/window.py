@@ -1,7 +1,8 @@
 import cv2
+import numpy as np
 import pygame
 
-from camera import Camera
+import camera
 
 
 class Window:
@@ -27,7 +28,7 @@ class Window:
             self.__draw_button(button)
 
     def draw_image(self, image, window_number):
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # transforming the picture from BGR to RGB
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # transforming the picture from BGR to RGB
         image = pygame.surfarray.make_surface(image)  # making the picture a pygame surface
         image = pygame.transform.rotate(image, -90)
         self.display.blit(image, (self.images[window_number], 0))
@@ -50,7 +51,7 @@ class Window:
 
 
 def shout():
-    print("your mother is a whore")
+    print("hello there")
 
 
 def main():
@@ -61,9 +62,13 @@ def main():
     # window.add_button(button1)
     # window.add_button(button2)
     # window.add_button(button3)
-    cam = Camera(0)
+    cam = camera.Camera(0)
     # print(cam.size)
     window.add_camera_window(cam.size[1])
+    lower_blue = np.array([60, 35, 140])
+    upper_blue = np.array([200, 255, 255])
+
+    # preparing the mask to overlay
     window.add_camera_window(cam.size[1])
     # window.add_camera_window(cam.size[1])
 
@@ -71,8 +76,11 @@ def main():
         pygame.display.update()
         window.clock.tick(60)
         # window.draw_all_buttons()
-        window.draw_image(cam.get_image_bgr(), 0)
-        window.draw_image(cam.get_image_bgr(), 1)
+        image = cam.get_image_bgr()
+        window.draw_image(camera.convert_bgr2rgb(image), 0)
+        mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_blue, upper_blue)
+        result = cv2.bitwise_and(image, image, mask=mask)
+        window.draw_image(camera.convert_bgr2rgb(mask), 1)
         # window.draw_image(cam.get_image_bgr(), 2)
         # time.sleep(0.5)
         for event in pygame.event.get():
