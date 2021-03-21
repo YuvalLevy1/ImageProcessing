@@ -1,8 +1,8 @@
 import pygame
 
 
-class Button:
-    def __init__(self, x, y, width, height, color, text, function):
+class BaseButton:
+    def __init__(self, x, y, width, height, color, text):
         self.x = x
         self.y = y
         self.width = width
@@ -11,7 +11,6 @@ class Button:
         self.color = color
         font = pygame.font.SysFont('Corbel', 35)
         self.text = font.render(text, True, (255, 255, 255))
-        self.function = function
 
     def is_mouse_on_button(self, mouse_pos):
         if self.rectangle.collidepoint(mouse_pos):
@@ -23,3 +22,11 @@ class Button:
         height = rect.height
         return self.x + (self.width - width) / 2, self.y + (self.height - height) / 2
 
+
+class FunctionalButton(BaseButton):
+    def __init__(self, x, y, width, height, color, text, function):
+        super().__init__(x, y, width, height, color, text)
+        self.function = function
+
+    def use_button(self):
+        self.function()
