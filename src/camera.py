@@ -18,4 +18,8 @@ class Camera:
     def get_image_rgb(self):
         return cv2.cvtColor(self.src.read(), cv2.COLOR_BGR2RGB)
 
+    def get_image_hsv(self):
+        return cv2.cvtColor(self.src.read(), cv2.COLOR_BGR2HSV)
 
+    def stop(self):
+        self.src.stop()
