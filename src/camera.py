@@ -1,5 +1,6 @@
 import cv2
 from imutils.video import VideoStream
+import time
 
 
 def convert_bgr2hsv(image):
@@ -19,13 +20,16 @@ class Camera:
         self.port = port
         self.src = VideoStream(src=port + cv2.CAP_DSHOW)
         self.__start()
-        self.size = list(self.get_image_bgr().shape)[:2]
+        time.sleep(2)
 
     def __start(self):
         self.src.start()
 
     def get_image_bgr(self):
         return self.src.read()
+
+    def get_image_size(self):
+        return list(self.get_image_bgr().shape)[:2]
 
     def stop(self):
         self.src.stop()
