@@ -1,4 +1,3 @@
-import cv2
 import numpy as np
 import pygame
 
@@ -9,7 +8,6 @@ class Window:
     def __init__(self, size):
         self.size = size
         self.display = pygame.display.set_mode(self.size, 0)
-        pygame.init()
         pygame.display.set_caption('Image Processor')
         self.clock = pygame.time.Clock()
         self.images = []
@@ -55,7 +53,9 @@ def shout():
 
 
 def main():
-    window = Window((1920, 1080))
+    pygame.init()
+    info_object = pygame.display.Info()
+    window = Window((info_object.current_w, info_object.current_h))
     # button1 = FunctionalButton(0, 0, 100, 50, (100, 100, 100), "fudge", shout)
     # button2 = FunctionalButton(900, 400, 100, 50, (100, 100, 100), "fudge1", shout)
     # button3 = FunctionalButton(400, 800, 100, 50, (100, 100, 100), "fudge2", shout)
@@ -64,12 +64,12 @@ def main():
     # window.add_button(button3)
     cam = camera.Camera(0)
     # print(cam.size)
-    window.add_camera_window(cam.size[1])
+    window.add_camera_window(cam.get_image_size()[1])
     lower_blue = np.array([60, 35, 140])
     upper_blue = np.array([200, 255, 255])
 
     # preparing the mask to overlay
-    window.add_camera_window(cam.size[1])
+    window.add_camera_window(cam.get_image_size()[1])
     # window.add_camera_window(cam.size[1])
 
     while True:
@@ -78,9 +78,9 @@ def main():
         # window.draw_all_buttons()
         image = cam.get_image_bgr()
         window.draw_image(camera.convert_bgr2rgb(image), 0)
-        mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_blue, upper_blue)
-        result = cv2.bitwise_and(image, image, mask=mask)
-        window.draw_image(camera.convert_bgr2rgb(mask), 1)
+        window.draw_image(camera.convert_bgr2rgb(image), 1)
+        # mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_blue, upper_blue)
+        # result = cv2.bitwise_and(image, image, mask=mask)
         # window.draw_image(cam.get_image_bgr(), 2)
         # time.sleep(0.5)
         for event in pygame.event.get():
