@@ -1,7 +1,8 @@
-import numpy as np
 import pygame
 
 import camera
+import slider
+from buttons import FunctionalButton
 
 
 class Window:
@@ -13,6 +14,11 @@ class Window:
         self.images = []
         self.filters = []
         self.buttons = []  # button class list
+
+    def draw_slider(self, slider):
+        pygame.draw.rect(self.display, (0, 0, 0), slider.rectangle)
+        pygame.draw.circle(self.display, slider.
+                           get_circle_color(), (slider.get_circle_coordinates()), slider.get_circle_r())
 
     def add_button(self, button):
         self.buttons.append(button)
@@ -56,39 +62,50 @@ def main():
     pygame.init()
     info_object = pygame.display.Info()
     window = Window((info_object.current_w, info_object.current_h))
-    # button1 = FunctionalButton(0, 0, 100, 50, (100, 100, 100), "fudge", shout)
+    s = slider.Slider(300, 600, 0, 255, 100)
+    button1 = FunctionalButton(200, 200, 100, 50, (100, 100, 100), "fudge", shout)
     # button2 = FunctionalButton(900, 400, 100, 50, (100, 100, 100), "fudge1", shout)
-    # button3 = FunctionalButton(400, 800, 100, 50, (100, 100, 100), "fudge2", shout)
-    # window.add_button(button1)
+    # button3 = FunctionalButton(400, 600, 100, 50, (100, 100, 100), "fudge2", shout)
+    window.add_button(button1)
     # window.add_button(button2)
     # window.add_button(button3)
     cam = camera.Camera(0)
     # print(cam.size)
     window.add_camera_window(cam.get_image_size()[1])
-    lower_blue = np.array([60, 35, 140])
-    upper_blue = np.array([200, 255, 255])
+    # lower_blue = np.array([60, 35, 140])
+    # upper_blue = np.array([200, 255, 255])
 
     # preparing the mask to overlay
-    window.add_camera_window(cam.get_image_size()[1])
-    # window.add_camera_window(cam.size[1])
+    # window.add_camera_window(cam.get_image_size()[1])
 
     while True:
         pygame.display.update()
+        window.display.fill((255, 255, 255))
         window.clock.tick(60)
-        # window.draw_all_buttons()
+        window.draw_slider(s)
+        window.draw_all_buttons()
         image = cam.get_image_bgr()
         window.draw_image(camera.convert_bgr2rgb(image), 0)
-        window.draw_image(camera.convert_bgr2rgb(image), 1)
+        # window.draw_image(camera.convert_bgr2rgb(image), 1)
         # mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_blue, upper_blue)
         # result = cv2.bitwise_and(image, image, mask=mask)
         # window.draw_image(cam.get_image_bgr(), 2)
         # time.sleep(0.5)
         for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if s.is_mouse_on_button(pygame.mouse.get_pos()):
+                    s.held = True
+                if button1.is_mouse_on_button(pygame.mouse.get_pos()):
+                    button1.function()
+            if event.type == pygame.MOUSEBUTTONUP:
+                s.held = False
+
+            s.move_circle(pygame.mouse.get_pos()[0])
+            # print(s.get_value())
+
             # for button in window.buttons:
-            #     if event.type == pygame.MOUSEBUTTONDOWN:
-            #         if button.is_mouse_on_button(pygame.mouse.get_pos()):
-            #             button.function()
-            pass
+            #     if button.is_mouse_on_button(pygame.mouse.get_pos()):
+            #         button.function()
 
 
 if __name__ == '__main__':
