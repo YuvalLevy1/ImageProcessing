@@ -12,7 +12,7 @@ class Circle:
 
 
 class Slider:
-    def __init__(self, x, y, min_value, max_value, length):
+    def __init__(self, x, y, min_value, max_value, length, text):
         self.held = False
         self.__x = x
         self.__y = y
@@ -22,6 +22,8 @@ class Slider:
         self.__length = length
         self.rectangle = pygame.Rect(x, y, length, 5)
         self.__circle = Circle(x + int(length / 2), y + 2, 5, (127, 127, 127))
+        font = pygame.font.SysFont('Corbel', 20)
+        self.text = font.render(text, True, (0, 0, 0))
 
     """
     moves the circle according to borders
@@ -71,3 +73,7 @@ class Slider:
 
     def get_circle_color(self):
         return self.__circle.color
+
+    def get_text_coordinates(self):
+        width = self.text.get_rect().width
+        return self.__max_x + 3, self.__y - width / 2

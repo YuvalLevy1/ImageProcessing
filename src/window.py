@@ -19,6 +19,7 @@ class Window:
         pygame.draw.rect(self.display, (0, 0, 0), slider.rectangle)
         pygame.draw.circle(self.display, slider.
                            get_circle_color(), (slider.get_circle_coordinates()), slider.get_circle_r())
+        self.display.blit(slider.text, slider.get_text_coordinates())
 
     def add_button(self, button):
         self.buttons.append(button)
@@ -62,7 +63,7 @@ def main():
     pygame.init()
     info_object = pygame.display.Info()
     window = Window((info_object.current_w, info_object.current_h))
-    s = slider.Slider(300, 600, 0, 255, 100)
+    s = slider.Slider(300, 600, 0, 255, 100, 'h')
     button1 = FunctionalButton(200, 200, 100, 50, (100, 100, 100), "fudge", shout)
     # button2 = FunctionalButton(900, 400, 100, 50, (100, 100, 100), "fudge1", shout)
     # button3 = FunctionalButton(400, 600, 100, 50, (100, 100, 100), "fudge2", shout)
