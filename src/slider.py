@@ -68,6 +68,9 @@ class Slider:
     def get_circle_coordinates(self):
         return self.__circle.x, self.__circle.y
 
+    def get_size(self):
+        return self.rectangle.width + self.text.get_rect().width + 30
+
     def get_circle_r(self):
         return self.__circle.radius
 
@@ -76,4 +79,8 @@ class Slider:
 
     def get_text_coordinates(self):
         width = self.text.get_rect().width
-        return self.__max_x + 3, self.__y - width / 2
+        return self.__max_x + 3, self.__y - width / 2 - 4
+
+    def get_value_coordinates(self):
+        width = self.text.get_rect().width
+        return self.__x - 30, self.__y - width / 2 - 4
