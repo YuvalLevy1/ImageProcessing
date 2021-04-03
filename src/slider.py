@@ -2,6 +2,8 @@ import math
 
 import pygame
 
+SLIDER_HEIGHT = 5
+
 
 class Circle:
     def __init__(self, x, y, radius, color):
@@ -20,8 +22,8 @@ class Slider:
         self.min = min_value
         self.max = max_value
         self.__length = length
-        self.rectangle = pygame.Rect(x, y, length, 5)
-        self.__circle = Circle(x + int(length / 2), y + 2, 5, (127, 127, 127))
+        self.rectangle = pygame.Rect(x, y, length, SLIDER_HEIGHT)
+        self.__circle = Circle(x + int(length / 2), y + 2, SLIDER_HEIGHT, (127, 127, 127))
         font = pygame.font.SysFont('Corbel', 20)
         self.text = font.render(text, True, (0, 0, 0))
 
