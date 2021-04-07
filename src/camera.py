@@ -1,6 +1,9 @@
+import time
+
 import cv2
 from imutils.video import VideoStream
-import time
+
+IMAGE_SIZE = 640
 
 
 def convert_bgr2hsv(image):

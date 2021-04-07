@@ -1,9 +1,41 @@
+import threading
+import time
+
 import cv2
 import pygame
 
 import camera
 import filters
 import server
+
+global image
+
+
+def get_image():
+    global image
+    serv = server.Server()
+    while True:
+        message, image = serv.receive_image()
+
+
+def activate_buttons(sliders, buttons):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for slider in sliders:
+                    if slider.is_mouse_on_button(pygame.mouse.get_pos()):
+                        slider.held = True
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                for slider in sliders:
+                    slider.held = False
+
+        for button in buttons:
+            if button.is_mouse_on_button(pygame.mouse.get_pos()):
+                button.function()
+
+        for slider in sliders:
+            slider.move_circle(pygame.mouse.get_pos()[0])
 
 
 class Window:
@@ -14,7 +46,7 @@ class Window:
         self.clock = pygame.time.Clock()
         self.images = []
         self.filters = []
-        self.buttons = []  # button class list
+        self.buttons = []
 
     def __draw_slider(self, slider):
         pygame.draw.rect(self.display, (0, 0, 0), slider.rectangle)
@@ -35,7 +67,6 @@ class Window:
         self.display.blit(filter.title, filter.get_title_coordinates())
 
     def __draw_image(self, image, window_number):
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # transforming the picture from BGR to RGB
         image = pygame.surfarray.make_surface(image)  # making the picture a pygame surface
         image = pygame.transform.rotate(image, -90)
         self.display.blit(image, (self.images[window_number], 0))
@@ -65,27 +96,38 @@ class Window:
 
     def __calculate_locations(self, amount, width):
         space = int((self.size[0] - width * amount) / (amount + 1))
-        print(space)
         coordinate = 0 + space
         locations = [coordinate]
         for i in range(amount - 1):
             locations.append(locations[i] + width + space)
         return locations
 
+    def get_sliders(self):
+        sliders = []
+        for f in self.filters:
+            sliders.append(f.sliders)
+        return sliders
+
 
 def main():
+    global image
     pygame.init()
     info_object = pygame.display.Info()
     window = Window((info_object.current_w, info_object.current_h))
 
     hsv_filter = filters.HSV_Filter(300, 520, "HSV filter")
-
-    serv = server.Server()
-    message, cam = serv.receive_image()
-
-    window.add_camera_window(list(cam.shape)[:2][1])
-    window.add_camera_window(list(cam.shape)[:2][1])
     window.add_filter(hsv_filter)
+
+    receiving = threading.Thread(target=get_image)
+    buttons = threading.Thread(target=activate_buttons,
+                               args=(window.get_sliders()[0], window.buttons))
+    receiving.start()
+    buttons.start()
+
+    time.sleep(5)
+
+    window.add_camera_window(camera.IMAGE_SIZE)
+    window.add_camera_window(camera.IMAGE_SIZE)
 
     while True:
         lower_color = hsv_filter.get_lower_color()
@@ -97,27 +139,12 @@ def main():
 
         window.draw_all_filters()
         window.draw_all_buttons()
-        message, image = serv.receive_image()
-        # window.__draw_image(camera.convert_bgr2rgb(image), 0)
+
         mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_color, upper_color)
-        # window.__draw_image(camera.convert_bgr2rgb(mask), 1)
         window.draw_all_images([camera.convert_bgr2rgb(image), camera.convert_bgr2rgb(mask)])
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for slider in hsv_filter.sliders:
-                    if slider.is_mouse_on_button(pygame.mouse.get_pos()):
-                        slider.held = True
 
-            if event.type == pygame.MOUSEBUTTONUP:
-                for slider in hsv_filter.sliders:
-                    slider.held = False
-
-        for slider in hsv_filter.sliders:
-            slider.move_circle(pygame.mouse.get_pos()[0])
-
-        # for button in window.buttons:
-        #     if button.is_mouse_on_button(pygame.mouse.get_pos()):
-        #         button.function()
+        if len(pygame.event.get(eventtype=pygame.QUIT)) != 0:
+            break
 
 
 if __name__ == '__main__':
