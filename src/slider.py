@@ -3,6 +3,7 @@ import math
 import pygame
 
 SLIDER_HEIGHT = 5
+VALUE_SPACE = 30
 
 
 class Circle:
@@ -14,18 +15,19 @@ class Circle:
 
 
 class Slider:
-    def __init__(self, x, y, min_value, max_value, length, text):
+    def __init__(self, coordinates, min_value, max_value, length, text):
         self.held = False
-        self.__x = x
-        self.__y = y
-        self.__max_x = x + length
+        self.__x = coordinates[0]
+        self.__y = coordinates[1]
+        self.__max_x = self.__x + length
         self.min = min_value
         self.max = max_value
         self.__length = length
-        self.rectangle = pygame.Rect(x, y, length, SLIDER_HEIGHT)
-        self.__circle = Circle(x + int(length / 2), y + 2, SLIDER_HEIGHT, (127, 127, 127))
+        self.rectangle = pygame.Rect(self.__x, self.__y, length, SLIDER_HEIGHT)
+        self.__circle = Circle(self.__x + int(length / 2), self.__y + 2, SLIDER_HEIGHT, (127, 127, 127))
         font = pygame.font.SysFont('Corbel', 20)
-        self.text = font.render(text, True, (0, 0, 0))
+        self.text = text
+        self.rendered_text = font.render(text, True, (0, 0, 0))
 
     """
     moves the circle according to borders
@@ -71,7 +73,7 @@ class Slider:
         return self.__circle.x, self.__circle.y
 
     def get_size(self):
-        return self.rectangle.width + self.text.get_rect().width + 30
+        return self.rectangle.width + self.rendered_text.get_rect().width + (self.__x - self.get_value_coordinates()[0]) + VALUE_SPACE
 
     def get_circle_r(self):
         return self.__circle.radius
@@ -80,9 +82,9 @@ class Slider:
         return self.__circle.color
 
     def get_text_coordinates(self):
-        width = self.text.get_rect().width
+        width = self.rendered_text.get_rect().width
         return self.__max_x + 3, self.__y - width / 2 - 4
 
     def get_value_coordinates(self):
-        width = self.text.get_rect().width
-        return self.__x - 30, self.__y - width / 2 - 4
+        width = self.rendered_text.get_rect().width
+        return self.__x - VALUE_SPACE, self.__y - width / 2 - 4
