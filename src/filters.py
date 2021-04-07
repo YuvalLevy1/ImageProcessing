@@ -1,3 +1,4 @@
+import numpy as np
 import pygame
 
 import slider
@@ -50,8 +51,34 @@ class Filter:
 class HSV_Filter(Filter):
     def __init__(self, x, y, title):
         super().__init__(x, y, title)
+        self.add_slider(0, 255, 100, 't')
+        self.add_slider(0, 255, 100, 'h')
+        self.add_slider(0, 255, 100, 's')
+        self.add_slider(0, 255, 100, 'v')
 
     def get_value(self, text):
         for slider in self.sliders:
             if slider.text == text:
                 return slider.get_value()
+
+    def get_lower_color(self):
+        return np.array([get_lower_value(self.get_value("h"), self.get_value("t")),
+                         get_lower_value(self.get_value("s"), self.get_value("t")),
+                         get_lower_value(self.get_value("v"), self.get_value("t"))])
+
+    def get_upper_color(self):
+        return np.array([get_upper_value(self.get_value("h"), self.get_value("t")),
+                         get_upper_value(self.get_value("s"), self.get_value("t")),
+                         get_upper_value(self.get_value("v"), self.get_value("t"))])
+
+
+def get_lower_value(value, toleration):
+    if value - toleration > 0:
+        return value - toleration
+    return 0
+
+
+def get_upper_value(value, toleration):
+    if value + toleration < 255:
+        return value + toleration
+    return 255
