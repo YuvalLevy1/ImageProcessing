@@ -25,31 +25,43 @@ class Window:
         value = font.render(str(slider.get_value()), True, (0, 0, 0))
         self.display.blit(value, slider.get_value_coordinates())
 
-    def add_button(self, button):
-        self.buttons.append(button)
-
     def __draw_button(self, button):
         pygame.draw.rect(self.display, button.color, button.rectangle)
         self.display.blit(button.rendered_text, button.get_text_coordinates())
 
-    def draw_filter(self, filter):
+    def __draw_filter(self, filter):
         for s in filter.sliders:
             self.__draw_slider(s)
         self.display.blit(filter.title, filter.get_title_coordinates())
 
-    def draw_all_buttons(self):
-        for button in self.buttons:
-            self.__draw_button(button)
-
-    def draw_image(self, image, window_number):
+    def __draw_image(self, image, window_number):
         # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # transforming the picture from BGR to RGB
         image = pygame.surfarray.make_surface(image)  # making the picture a pygame surface
         image = pygame.transform.rotate(image, -90)
         self.display.blit(image, (self.images[window_number], 0))
 
+    def add_button(self, button):
+        self.buttons.append(button)
+
+    def add_camera_window(self, width):
+        self.images = self.__calculate_locations(len(self.images) + 1, width)
+
+    def add_filter(self, filter):
+        self.filters.append(filter)
+
+    def draw_all_buttons(self):
+        for button in self.buttons:
+            self.__draw_button(button)
+
     def draw_all_images(self, images):
-        for key in images.keys:
-            self.draw_image(key, images[key])
+        count = 0
+        for image in images:
+            self.__draw_image(image, count)
+            count += 1
+
+    def draw_all_filters(self):
+        for filter in self.filters:
+            self.__draw_filter(filter)
 
     def __calculate_locations(self, amount, width):
         space = int((self.size[0] - width * amount) / (amount + 1))
@@ -60,19 +72,20 @@ class Window:
             locations.append(locations[i] + width + space)
         return locations
 
-    def add_camera_window(self, width):
-        self.images = self.__calculate_locations(len(self.images) + 1, width)
-
 
 def main():
     pygame.init()
     info_object = pygame.display.Info()
     window = Window((info_object.current_w, info_object.current_h))
+
     hsv_filter = filters.HSV_Filter(300, 520, "HSV filter")
+
     serv = server.Server()
     message, cam = serv.receive_image()
+
     window.add_camera_window(list(cam.shape)[:2][1])
     window.add_camera_window(list(cam.shape)[:2][1])
+    window.add_filter(hsv_filter)
 
     while True:
         lower_color = hsv_filter.get_lower_color()
@@ -82,13 +95,13 @@ def main():
         window.display.fill((255, 255, 255))
         window.clock.tick(60)
 
-        window.draw_filter(hsv_filter)
+        window.draw_all_filters()
         window.draw_all_buttons()
         message, image = serv.receive_image()
-        window.draw_image(camera.convert_bgr2rgb(image), 0)
+        # window.__draw_image(camera.convert_bgr2rgb(image), 0)
         mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_color, upper_color)
-        window.draw_image(camera.convert_bgr2rgb(mask), 1)
-
+        # window.__draw_image(camera.convert_bgr2rgb(mask), 1)
+        window.draw_all_images([camera.convert_bgr2rgb(image), camera.convert_bgr2rgb(mask)])
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for slider in hsv_filter.sliders:
@@ -98,6 +111,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 for slider in hsv_filter.sliders:
                     slider.held = False
+
         for slider in hsv_filter.sliders:
             slider.move_circle(pygame.mouse.get_pos()[0])
 
