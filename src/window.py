@@ -119,12 +119,8 @@ class Window:
         return sliders[0]
 
     def get_image_color(self, coordinates):
-        if self.current_image is not None:
-            # print("rgb is:{}".format(self.current_image.get_at(coordinates)))
-            hsv = convert_rgb_hsv(self.display.get_at(coordinates))
-            # print("hsv is:{}".format(hsv[0][0]))
-            return hsv[0][0]
-            # return hsv
+        hsv = convert_rgb_hsv(self.display.get_at(coordinates))
+        return hsv[0][0]
 
     def get_filter(self, title):
         for filter in self.filters:
