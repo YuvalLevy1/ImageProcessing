@@ -7,6 +7,7 @@ import pygame
 import camera
 import filters
 import server
+from utils import convert_rgb_hsv, is_collided_with_surface
 
 global image
 
@@ -18,23 +19,27 @@ def get_image():
         message, image = serv.receive_image()
 
 
-def activate_buttons(sliders, buttons):
+def event_handler(window):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
-                for slider in sliders:
+                for slider in window.get_sliders():
                     if slider.is_mouse_on_button(pygame.mouse.get_pos()):
                         slider.held = True
 
+                if is_collided_with_surface(window.current_image, pygame.mouse.get_pos()):
+                    window.get_filter("hsv"). \
+                        change_hsv_values(window.get_image_color(pygame.mouse.get_pos()))
+
             if event.type == pygame.MOUSEBUTTONUP:
-                for slider in sliders:
+                for slider in window.get_sliders():
                     slider.held = False
 
-        for button in buttons:
+        for button in window.buttons:
             if button.is_mouse_on_button(pygame.mouse.get_pos()):
                 button.function()
 
-        for slider in sliders:
+        for slider in window.get_sliders():
             slider.move_circle(pygame.mouse.get_pos()[0])
 
 
@@ -44,7 +49,8 @@ class Window:
         self.display = pygame.display.set_mode(self.size, 0)
         pygame.display.set_caption('Image Processor')
         self.clock = pygame.time.Clock()
-        self.images = []
+        self.image_locations = []
+        self.current_image = None
         self.filters = []
         self.buttons = []
 
@@ -64,18 +70,23 @@ class Window:
     def __draw_filter(self, filter):
         for s in filter.sliders:
             self.__draw_slider(s)
-        self.display.blit(filter.title, filter.get_title_coordinates())
+        self.display.blit(filter.title_font, filter.get_title_coordinates())
 
     def __draw_image(self, image, window_number):
         image = pygame.surfarray.make_surface(image)  # making the picture a pygame surface
         image = pygame.transform.rotate(image, -90)
-        self.display.blit(image, (self.images[window_number], 0))
+        self.display.blit(image, (self.image_locations[window_number], 0))
+
+    def update_current_image(self, image):
+        image = pygame.surfarray.make_surface(image)  # making the picture a pygame surface
+        image = pygame.transform.rotate(image, -90)
+        self.current_image = image
 
     def add_button(self, button):
         self.buttons.append(button)
 
     def add_camera_window(self, width):
-        self.images = self.__calculate_locations(len(self.images) + 1, width)
+        self.image_locations = self.__calculate_locations(len(self.image_locations) + 1, width)
 
     def add_filter(self, filter):
         self.filters.append(filter)
@@ -106,7 +117,19 @@ class Window:
         sliders = []
         for f in self.filters:
             sliders.append(f.sliders)
-        return sliders
+        return sliders[0]
+
+    def get_image_color(self, coordinates):
+        if self.current_image is not None:
+            print("rgb is:{}".format(self.current_image.get_at(coordinates)))
+            hsv = convert_rgb_hsv(self.current_image.get_at(coordinates))
+            print("hsv is:{}".format(hsv[0][0]))
+            return hsv[0][0]
+
+    def get_filter(self, title):
+        for filter in self.filters:
+            if filter.title == title:
+                return filter
 
 
 def main():
@@ -115,12 +138,11 @@ def main():
     info_object = pygame.display.Info()
     window = Window((info_object.current_w, info_object.current_h))
 
-    hsv_filter = filters.HSV_Filter(300, 520, "HSV filter")
+    hsv_filter = filters.HSV_Filter(300, 520)
     window.add_filter(hsv_filter)
 
     receiving = threading.Thread(target=get_image)
-    buttons = threading.Thread(target=activate_buttons,
-                               args=(window.get_sliders()[0], window.buttons))
+    buttons = threading.Thread(target=event_handler, args=[window])
     receiving.start()
     buttons.start()
 
@@ -142,6 +164,7 @@ def main():
 
         mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_color, upper_color)
         window.draw_all_images([camera.convert_bgr2rgb(image), camera.convert_bgr2rgb(mask)])
+        window.update_current_image(image)
 
         if len(pygame.event.get(eventtype=pygame.QUIT)) != 0:
             break
