@@ -7,7 +7,7 @@ import pygame
 import camera
 import filters
 import server
-from utils import convert_rgb_hsv, is_collided_with_surface
+from utils import convert_rgb_hsv, is_collided_with_camera
 
 global image
 
@@ -27,7 +27,7 @@ def event_handler(window):
                     if slider.is_mouse_on_button(pygame.mouse.get_pos()):
                         slider.held = True
 
-                if is_collided_with_surface(window.current_image, pygame.mouse.get_pos()):
+                if is_collided_with_camera((window.image_locations[0], 0), pygame.mouse.get_pos()):
                     window.get_filter("hsv"). \
                         change_hsv_values(window.get_image_color(pygame.mouse.get_pos()))
 
@@ -50,7 +50,6 @@ class Window:
         pygame.display.set_caption('Image Processor')
         self.clock = pygame.time.Clock()
         self.image_locations = []
-        self.current_image = None
         self.filters = []
         self.buttons = []
 
@@ -121,10 +120,11 @@ class Window:
 
     def get_image_color(self, coordinates):
         if self.current_image is not None:
-            print("rgb is:{}".format(self.current_image.get_at(coordinates)))
-            hsv = convert_rgb_hsv(self.current_image.get_at(coordinates))
-            print("hsv is:{}".format(hsv[0][0]))
+            # print("rgb is:{}".format(self.current_image.get_at(coordinates)))
+            hsv = convert_rgb_hsv(self.display.get_at(coordinates))
+            # print("hsv is:{}".format(hsv[0][0]))
             return hsv[0][0]
+            # return hsv
 
     def get_filter(self, title):
         for filter in self.filters:
@@ -148,8 +148,8 @@ def main():
 
     time.sleep(5)
 
-    window.add_camera_window(camera.IMAGE_SIZE)
-    window.add_camera_window(camera.IMAGE_SIZE)
+    window.add_camera_window(camera.IMAGE_WIDTH)
+    window.add_camera_window(camera.IMAGE_WIDTH)
 
     while True:
         lower_color = hsv_filter.get_lower_color()
@@ -164,7 +164,6 @@ def main():
 
         mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_color, upper_color)
         window.draw_all_images([camera.convert_bgr2rgb(image), camera.convert_bgr2rgb(mask)])
-        window.update_current_image(image)
 
         if len(pygame.event.get(eventtype=pygame.QUIT)) != 0:
             break
