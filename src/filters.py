@@ -53,7 +53,7 @@ class HSV_Filter(Filter):
     def __init__(self, x, y):
         super().__init__(x, y, "hsv")
         self.add_slider(0, 255, 100, 't')
-        self.add_slider(0, 255, 100, 'h')
+        self.add_slider(0, 180, 100, 'h')
         self.add_slider(0, 255, 100, 's')
         self.add_slider(0, 255, 100, 'v')
 
@@ -68,7 +68,7 @@ class HSV_Filter(Filter):
         self.__move_to_value("h", hsv[0])
         self.__move_to_value("s", hsv[1])
         self.__move_to_value("v", hsv[2])
-        self.__move_to_value("t", 70)
+        self.__move_to_value("t", 50)
 
     def get_value(self, text):
         for slider in self.sliders:
