@@ -66,6 +66,9 @@ class Slider:
 
         return int((self.__circle.x - self.__x) * (self.max / self.__length))
 
+    def get_circle_x_by_value(self, value):
+        return (value * self.__length + self.__x * self.max) / self.max
+
     def is_mouse_on_button(self, mouse_pos):
         return math.dist(mouse_pos, self.get_circle_coordinates()) <= self.__circle.radius
 
@@ -73,7 +76,8 @@ class Slider:
         return self.__circle.x, self.__circle.y
 
     def get_size(self):
-        return self.rectangle.width + self.rendered_text.get_rect().width + (self.__x - self.get_value_coordinates()[0]) + VALUE_SPACE
+        return self.rectangle.width + self.rendered_text.get_rect().width + (
+                self.__x - self.get_value_coordinates()[0]) + VALUE_SPACE
 
     def get_circle_r(self):
         return self.__circle.radius
