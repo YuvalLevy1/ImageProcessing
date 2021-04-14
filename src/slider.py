@@ -69,7 +69,7 @@ class Slider:
     def get_circle_x_by_value(self, value):
         return (value * self.__length + self.__x * self.max) / self.max
 
-    def is_mouse_on_button(self, mouse_pos):
+    def is_mouse_on_circle(self, mouse_pos):
         return math.dist(mouse_pos, self.get_circle_coordinates()) <= self.__circle.radius
 
     def get_circle_coordinates(self):

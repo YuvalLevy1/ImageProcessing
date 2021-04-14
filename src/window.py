@@ -4,12 +4,15 @@ import time
 import cv2
 import pygame
 
+import buttons as button
 import camera
 import filters
 import server
 from utils import convert_rgb_hsv, is_collided_with_surface
 
-global image
+image = None
+mask = None
+contours = None
 
 
 def get_image():
@@ -24,23 +27,32 @@ def event_handler(window):
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for slider in window.get_sliders():
-                    if slider.is_mouse_on_button(pygame.mouse.get_pos()):
+                    if slider.is_mouse_on_circle(pygame.mouse.get_pos()):
                         slider.held = True
 
                 if is_collided_with_surface(window.current_image, pygame.mouse.get_pos()):
                     window.get_filter("hsv"). \
                         change_hsv_values(window.get_image_color(pygame.mouse.get_pos()))
 
+                for button in window.buttons:
+                    if button.is_mouse_on_button(pygame.mouse.get_pos()):
+                        button.toggle = not button.toggle
+                        print("toggling button")
+
             if event.type == pygame.MOUSEBUTTONUP:
                 for slider in window.get_sliders():
                     slider.held = False
 
-        for button in window.buttons:
-            if button.is_mouse_on_button(pygame.mouse.get_pos()):
-                button.function()
-
         for slider in window.get_sliders():
             slider.move_circle(pygame.mouse.get_pos()[0])
+
+
+def find_contours(toggle_button):
+    global contours, mask
+    if toggle_button.is_pressed() and mask is not None:
+        contours, h = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours is not None:
+        print(contours)
 
 
 class Window:
@@ -65,7 +77,7 @@ class Window:
 
     def __draw_button(self, button):
         pygame.draw.rect(self.display, button.color, button.rectangle)
-        self.display.blit(button.rendered_text, button.get_text_coordinates())
+        self.display.blit(button.text, button.get_text_coordinates())
 
     def __draw_filter(self, filter):
         for s in filter.sliders:
@@ -133,7 +145,7 @@ class Window:
 
 
 def main():
-    global image
+    global image, mask
     pygame.init()
     info_object = pygame.display.Info()
     window = Window((info_object.current_w, info_object.current_h))
@@ -141,12 +153,19 @@ def main():
     hsv_filter = filters.HSV_Filter(300, 520)
     window.add_filter(hsv_filter)
 
-    receiving = threading.Thread(target=get_image)
-    buttons = threading.Thread(target=event_handler, args=[window])
-    receiving.start()
-    buttons.start()
+    toggle_contours = button.BaseButton(600, 500, 160, 50, (100, 100, 100), "toggle contours")
+    window.add_button(toggle_contours)
 
-    time.sleep(5)
+    receiving = threading.Thread(target=get_image)
+    events = threading.Thread(target=event_handler, args=[window])
+    # contours_thread = threading.Thread(target=find_contours, args=[toggle_contours])
+
+    receiving.start()
+    events.start()
+    # contours_thread.start()
+
+    while image is None:
+        time.sleep(5)
 
     window.add_camera_window(camera.IMAGE_SIZE)
     window.add_camera_window(camera.IMAGE_SIZE)
@@ -165,7 +184,7 @@ def main():
         mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_color, upper_color)
         window.draw_all_images([camera.convert_bgr2rgb(image), camera.convert_bgr2rgb(mask)])
         window.update_current_image(image)
-
+        find_contours(toggle_contours)
         if len(pygame.event.get(eventtype=pygame.QUIT)) != 0:
             break
 
