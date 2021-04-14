@@ -5,7 +5,7 @@ import camera
 
 
 def convert_rgb_hsv(rgb):
-    return cv2.cvtColor(np.uint8([[rgb]]), cv2.COLOR_BGR2HSV)
+    return cv2.cvtColor(np.uint8([[rgb]]), cv2.COLOR_RGB2HSV)
 
 
 def is_collided_with_camera(camera_coordinates, coordinates):
