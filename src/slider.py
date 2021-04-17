@@ -86,9 +86,7 @@ class Slider:
         return self.__circle.color
 
     def get_text_coordinates(self):
-        width = self.rendered_text.get_rect().width
-        return self.__max_x + 3, self.__y - width / 2 - 4
+        return self.__max_x + 3, self.__y - 8
 
     def get_value_coordinates(self):
-        width = self.rendered_text.get_rect().width
-        return self.__x - VALUE_SPACE, self.__y - width / 2 - 4
+        return self.__x - VALUE_SPACE, self.__y - 8
