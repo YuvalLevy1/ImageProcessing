@@ -49,21 +49,24 @@ def event_handler(window):
 
 def find_contours(toggle_button):
     global contours, mask
-    while True:
-        if toggle_button.is_pressed() and mask is not None:
-            contours, h = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if mask is not None and toggle_button.is_pressed():
+        contours, h = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 
 def find_contour_coordinates(mask_coordinates, moment):
     try:
-        # print((mask_coordinates - int(moment['m10'] / moment['m00']),
-        #        int(moment['m01'] / moment['m00'])))
-
         return (mask_coordinates + camera.IMAGE_WIDTH - int(moment['m10'] / moment['m00']),
                 int(moment['m01'] / moment['m00']))
-
     except ZeroDivisionError:
         return None
+
+
+def find_contour_area(contour):
+    return cv2.contourArea(contour)
+
+
+def find_contour_width(contour):
+    return cv2.boundingRect(contour)[2]
 
 
 class Window:
@@ -99,11 +102,6 @@ class Window:
         image = pygame.transform.rotate(image, -90)
         self.display.blit(image, (self.image_locations[window_number], 0))
 
-    def update_current_image(self, image):
-        image = pygame.surfarray.make_surface(image)  # making the picture a pygame surface
-        image = pygame.transform.rotate(image, -90)
-        self.current_image = image
-
     def add_button(self, button):
         self.buttons.append(button)
 
@@ -138,15 +136,14 @@ class Window:
     def get_sliders(self):
         sliders = []
         for f in self.filters:
-            sliders.append(f.sliders)
-        return sliders[0]
+            sliders += f.sliders
+        return sliders
 
     def get_image_color(self, coordinates):
-        if self.current_image is not None:
-            print("rgb is:{}".format(self.display.get_at(coordinates)))
-            hsv = convert_rgb_hsv(self.display.get_at(coordinates))
-            print("hsv is:{}".format(hsv[0][0]))
-            return hsv[0][0]
+        print("rgb is:{}".format(self.display.get_at(coordinates)))
+        hsv = convert_rgb_hsv(self.display.get_at(coordinates))
+        print("hsv is:{}".format(hsv[0][0]))
+        return hsv[0][0]
 
     def get_filter(self, title):
         for filter in self.filters:
@@ -166,9 +163,13 @@ def main():
     pygame.init()
     info_object = pygame.display.Info()
     window = Window((info_object.current_w, info_object.current_h))
+    window.add_camera_window(camera.IMAGE_WIDTH)
+    window.add_camera_window(camera.IMAGE_WIDTH)
 
     hsv_filter = filters.HSV_Filter(300, 520)
     window.add_filter(hsv_filter)
+    contour_filter = filters.ContourFilter(800, 520)
+    window.add_filter(contour_filter)
 
     toggle_contours = button.BaseButton(600, 500, 160, 50, (100, 100, 100), "toggle contours")
     window.add_button(toggle_contours)
@@ -177,12 +178,8 @@ def main():
     contours_thread = threading.Thread(target=find_contours, args=[toggle_contours])
 
     events.start()
-    contours_thread.start()
+    # contours_thread.start()
 
-    # sender = client.Client("127.0.0.1", 4444, 0)
-
-    window.add_camera_window(camera.IMAGE_WIDTH)
-    window.add_camera_window(camera.IMAGE_WIDTH)
 
     while True:
         lower_color = hsv_filter.get_lower_color()
@@ -190,21 +187,23 @@ def main():
 
         pygame.display.update()
         window.display.fill((255, 255, 255))
-        window.clock.tick(60)
+        window.clock.tick(30)
 
         window.draw_all_filters()
         window.draw_all_buttons()
 
         mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_color, upper_color)
         window.draw_all_images([camera.convert_bgr2rgb(image), camera.convert_bgr2rgb(mask)])
-        window.update_current_image(image)
+
+        find_contours(toggle_contours)
         if contours is not None and len(contours) > 0:
-            moment = cv2.moments(contours[0])
-            coordinates = find_contour_coordinates(window.image_locations[1], moment)
-            if coordinates is not None:
-                pygame.draw.circle(window.display, (70, 70, 70),
-                                   coordinates,
-                                   5)
+            for contour in contours:
+                moment = cv2.moments(contour)
+                coordinates = find_contour_coordinates(window.image_locations[1], moment)
+                if coordinates is not None:
+                    pygame.draw.circle(window.display, (70, 150, 70),
+                                       coordinates,
+                                       5)
         if len(pygame.event.get(eventtype=pygame.QUIT)) != 0:
             break
 

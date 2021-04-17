@@ -48,6 +48,11 @@ class Filter:
         self.width = self.get_width()
         self.slider_amount += 1
 
+    def get_value(self, text):
+        for slider in self.sliders:
+            if slider.text == text:
+                return slider.get_value()
+
 
 class HSV_Filter(Filter):
     def __init__(self, x, y):
@@ -70,11 +75,6 @@ class HSV_Filter(Filter):
         self.__move_to_value("v", hsv[2])
         self.__move_to_value("t", 50)
 
-    def get_value(self, text):
-        for slider in self.sliders:
-            if slider.text == text:
-                return slider.get_value()
-
     def get_lower_color(self):
         return np.array([get_lower_value(self.get_value("h"), self.get_value("t")),
                          get_lower_value(self.get_value("s"), self.get_value("t")),
@@ -84,6 +84,15 @@ class HSV_Filter(Filter):
         return np.array([get_upper_value(self.get_value("h"), self.get_value("t")),
                          get_upper_value(self.get_value("s"), self.get_value("t")),
                          get_upper_value(self.get_value("v"), self.get_value("t"))])
+
+
+class ContourFilter(Filter):
+    def __init__(self, x, y):
+        super().__init__(x, y, "contour filter")
+        self.add_slider(0, 250, 250, "min area")
+        self.add_slider(0, 1000, 250, "max area")
+        self.add_slider(0, 250, 250, "min width")
+        self.add_slider(0, 1000, 250, "max width")
 
 
 def get_lower_value(value, toleration):
