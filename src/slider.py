@@ -3,7 +3,7 @@ import math
 import pygame
 
 SLIDER_HEIGHT = 5
-VALUE_SPACE = 30
+VALUE_SPACE = 50
 
 
 class Circle:
