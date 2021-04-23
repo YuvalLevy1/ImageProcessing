@@ -89,10 +89,15 @@ class HSV_Filter(Filter):
 class ContourFilter(Filter):
     def __init__(self, x, y):
         super().__init__(x, y, "contour filter")
-        self.add_slider(0, 250, 250, "min area")
-        self.add_slider(0, 1000, 250, "max area")
-        self.add_slider(0, 250, 250, "min width")
-        self.add_slider(0, 1000, 250, "max width")
+        self.add_slider(0, 1000, 250, "min area")
+        self.add_slider(0, 5000, 250, "max area")
+        # self.add_slider(0, 250, 250, "min width")
+        # self.add_slider(0, 1000, 250, "max width")
+
+    def get_max_value(self, text):
+        for slider in self.sliders:
+            if slider.text == text:
+                return slider.max
 
 
 def get_lower_value(value, toleration):
