@@ -1,3 +1,4 @@
+import sys
 import threading
 import time
 
@@ -22,7 +23,25 @@ def get_image():
         message, image = serv.receive_image()
 
 
-def event_handler(window):
+def is_according_to_filter(filter, contour):
+    max_area = filter.get_value("max area")
+    min_area = filter.get_value("min area")
+    area = find_contour_area(contour)
+    if filter.get_max_value("max area") == max_area:
+        if min_area == 0:
+            return True
+        return area >= min_area
+
+    if min_area == 0:
+        return max_area >= area
+
+    if filter.get_value("max area") >= find_contour_area(contour) >= filter.get_value("min area"):
+        return True
+
+    return False
+
+
+def event_handler(window, running):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -45,6 +64,13 @@ def event_handler(window):
 
         for slider in window.get_sliders():
             slider.move_circle(pygame.mouse.get_pos()[0])
+        if not running:
+            break
+    print("stopped running")
+
+
+def get_distance_to_camera(contour, real_area):
+    return real_area * 1164.979969 / find_contour_width(contour)
 
 
 def find_contours(toggle_button):
@@ -154,6 +180,8 @@ class Window:
 def main():
     global image, mask, contours
 
+    running = True
+
     receiving = threading.Thread(target=get_image)
     receiving.start()
 
@@ -161,8 +189,8 @@ def main():
         time.sleep(5)
 
     pygame.init()
-    info_object = pygame.display.Info()
-    window = Window((info_object.current_w, info_object.current_h))
+    # info_object = pygame.display.Info()
+    window = Window((1280, 650))
     window.add_camera_window(camera.IMAGE_WIDTH)
     window.add_camera_window(camera.IMAGE_WIDTH)
 
@@ -174,14 +202,14 @@ def main():
     toggle_contours = button.BaseButton(600, 500, 160, 50, (100, 100, 100), "toggle contours")
     window.add_button(toggle_contours)
 
-    events = threading.Thread(target=event_handler, args=[window])
+    events = threading.Thread(target=event_handler, args=(window, lambda: running,))
     contours_thread = threading.Thread(target=find_contours, args=[toggle_contours])
 
     events.start()
     # contours_thread.start()
 
-
     while True:
+
         lower_color = hsv_filter.get_lower_color()
         upper_color = hsv_filter.get_upper_color()
 
@@ -198,14 +226,21 @@ def main():
         find_contours(toggle_contours)
         if contours is not None and len(contours) > 0:
             for contour in contours:
-                moment = cv2.moments(contour)
-                coordinates = find_contour_coordinates(window.image_locations[1], moment)
-                if coordinates is not None:
-                    pygame.draw.circle(window.display, (70, 150, 70),
-                                       coordinates,
-                                       5)
+                if is_according_to_filter(contour_filter, contour):
+                    moment = cv2.moments(contour)
+                    coordinates = find_contour_coordinates(window.image_locations[1], moment)
+                    if coordinates is not None:
+                        pygame.draw.circle(window.display, (70, 150, 70),
+                                           coordinates,
+                                           5)
+                        print(get_distance_to_camera(contour, 30))
+
         if len(pygame.event.get(eventtype=pygame.QUIT)) != 0:
             break
+
+    pygame.display.quit()
+    pygame.quit()  # exiting app
+    sys.exit()
 
 
 if __name__ == '__main__':
