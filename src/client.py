@@ -16,7 +16,7 @@ class Client:
 
 
 def main():
-    client = Client("127.0.0.1", 5555, 0)
+    client = Client("127.0.0.1", 5555, 1)
     while True:
         client.send_camera_image()
 
