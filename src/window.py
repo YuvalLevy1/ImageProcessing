@@ -13,6 +13,7 @@ from utils import convert_rgb_hsv, is_collided_with_camera
 
 image = None
 mask = None
+distance = 0
 contours = []
 
 
@@ -45,7 +46,7 @@ def is_according_to_filter(filter, contour):
 
 
 def calculate_contours(window, contour_filter, toggle_contours):
-    global contours
+    global contours, distance
     while True:
         # centroid_coordinates = []
         find_contours(toggle_contours)
@@ -58,11 +59,11 @@ def calculate_contours(window, contour_filter, toggle_contours):
                     coordinates = find_contour_coordinates(window.image_locations[1], moment)
                     if coordinates is not None:
                         window.contour_centroid = coordinates
-                        print(get_distance_to_camera(contours[index], 30))
+                        distance = get_distance_to_camera(contours[index], 33)
 
 
 def get_distance_to_camera(contour, real_width):
-    return real_width * 1164.979969 / find_contour_width(contour) / 2
+    return real_width * 1250.97996 / find_contour_width(contour) / 2
 
 
 def find_contours(toggle_button):
@@ -172,7 +173,7 @@ class Window:
 
 
 def main():
-    global image, mask, contours, centroid_coordinates
+    global image, mask, contours, centroid_coordinates, distance
 
     receiving = threading.Thread(target=get_image)
     receiving.start()
@@ -181,6 +182,7 @@ def main():
         time.sleep(5)
 
     pygame.init()
+    font = pygame.font.SysFont('Corbel', 20)
     # info_object = pygame.display.Info()
     window = Window((1280, 650))
     window.add_camera_window(camera.IMAGE_WIDTH)
@@ -198,7 +200,6 @@ def main():
     contours_thread.start()
 
     while True:
-
         lower_color = hsv_filter.get_lower_color()
         upper_color = hsv_filter.get_upper_color()
 
@@ -219,7 +220,6 @@ def main():
                 pygame.display.quit()
                 pygame.quit()
                 sys.exit()
-
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for slider in window.get_sliders():
@@ -246,6 +246,8 @@ def main():
             pygame.draw.circle(window.display, (70, 150, 70),
                                window.contour_centroid,
                                5)
+        rendered_distance = font.render(str(distance), True, (0, 0, 0))
+        window.display.blit(rendered_distance, (800, 500))
 
 
 if __name__ == '__main__':
