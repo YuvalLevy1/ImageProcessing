@@ -59,7 +59,7 @@ def calculate_contours(window, contour_filter, toggle_contours):
                     coordinates = find_contour_coordinates(window.image_locations[1], moment)
                     if coordinates is not None:
                         window.contour_centroid = coordinates
-                        distance = get_distance_to_camera(contours[index], 33)
+                        distance = get_distance_to_camera(contours[index], 30)
 
 
 def get_distance_to_camera(contour, real_width):
@@ -127,7 +127,7 @@ class Window:
         self.buttons.append(button)
 
     def add_camera_window(self, width):
-        self.image_locations = self.__calculate_locations(len(self.image_locations) + 1, width)
+        self.image_locations = self.__calculate_image_locations(len(self.image_locations) + 1, width)
 
     def add_filter(self, filter):
         self.filters.append(filter)
@@ -146,7 +146,7 @@ class Window:
         for filter in self.filters:
             self.__draw_filter(filter)
 
-    def __calculate_locations(self, amount, width):
+    def __calculate_image_locations(self, amount, width):
         space = int((self.size[0] - width * amount) / (amount + 1))
         coordinate = 0 + space
         locations = [coordinate]
