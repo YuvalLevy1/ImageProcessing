@@ -5,6 +5,7 @@ from imutils.video import VideoStream
 
 IMAGE_WIDTH = 640
 IMAGE_LENGTH = 480
+FOV_ANGLE = 60
 
 
 def convert_bgr2hsv(image):
