@@ -55,7 +55,7 @@ def calculate_contours(window, contour_filter, toggle_contours):
                     coordinates = find_contour_coordinates(window.image_locations[1], moment)
                     if coordinates is not None:
                         window.contour_centroid = coordinates
-                        distance = get_distance_to_camera(contours[index], 30)
+                        distance = get_distance_to_camera(contours[index], 34)
 
 
 def get_distance_to_camera(contour, real_width):
@@ -184,12 +184,12 @@ def main():
     window.add_camera_window(camera.IMAGE_WIDTH)
     window.add_camera_window(camera.IMAGE_WIDTH)
 
-    hsv_filter = filters.HSV_Filter(300, 520)
+    hsv_filter = filters.HSV_Filter(30, 510)
     window.add_filter(hsv_filter)
-    contour_filter = filters.ContourFilter(800, 520)
+    contour_filter = filters.ContourFilter(200, 510)
     window.add_filter(contour_filter)
 
-    toggle_contours = BaseButton(600, 500, 160, 50, (100, 100, 100), "toggle contours")
+    toggle_contours = BaseButton(1000, 550, 160, 50, (100, 100, 100), "toggle contours")
     window.add_button(toggle_contours)
 
     contours_thread = threading.Thread(target=calculate_contours, args=[window, contour_filter, toggle_contours])
@@ -243,7 +243,7 @@ def main():
                                window.contour_centroid,
                                5)
         rendered_distance = font.render(str(distance), True, (0, 0, 0))
-        window.display.blit(rendered_distance, (800, 500))
+        window.display.blit(rendered_distance, (1200, 565))
 
 
 if __name__ == '__main__':
