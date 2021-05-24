@@ -14,11 +14,7 @@ from utils import convert_rgb_hsv, is_collided_with_camera
 image = None
 mask = None
 distance = 0
-angle = 0
 contours = []
-
-
-
 
 
 def get_image():
@@ -47,7 +43,7 @@ def is_according_to_filter(filter, contour):
 
 
 def calculate_contours(window, contour_filter, toggle_contours):
-    global contours, distance, angle
+    global contours, distance
     while True:
         find_contours(toggle_contours)
         if contours is not None and len(contours) > 0:
@@ -60,16 +56,10 @@ def calculate_contours(window, contour_filter, toggle_contours):
                     if coordinates is not None:
                         window.contour_centroid = coordinates
                         distance = get_distance_to_camera(contours[index], 30)
-                        angle = get_angle_to_camera(coordinates, window.image_locations[1])
 
 
 def get_distance_to_camera(contour, real_width):
     return real_width * 1250.97996 / find_contour_width(contour) / 2
-
-
-def get_angle_to_camera(contour_centroid, mask_coordinates):
-    camera_center = mask_coordinates + camera.IMAGE_WIDTH / 2
-    return camera.FOV_ANGLE / camera.IMAGE_WIDTH * (abs(camera_center - contour_centroid[0]))
 
 
 def find_contours(toggle_button):
@@ -179,7 +169,7 @@ class Window:
 
 
 def main():
-    global image, mask, contours, distance, angle
+    global image, mask, contours, distance
 
     receiving = threading.Thread(target=get_image)
     receiving.start()
@@ -253,9 +243,7 @@ def main():
                                window.contour_centroid,
                                5)
         rendered_distance = font.render(str(distance), True, (0, 0, 0))
-        rendered_angle = font.render(str(angle), True, (0, 0, 0))
         window.display.blit(rendered_distance, (800, 500))
-        window.display.blit(rendered_angle, (1000, 500))
 
 
 if __name__ == '__main__':
