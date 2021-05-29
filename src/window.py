@@ -15,13 +15,15 @@ image = None
 mask = None
 distance = 0
 contours = []
+running = True
+serv = server.Server()
 
 
 def get_image():
-    global image
-    serv = server.Server()
-    while True:
+    global image, running, serv
+    while running:
         message, image = serv.receive_image()
+    print("stopped receiving")
 
 
 def is_according_to_filter(filter, contour):
@@ -43,8 +45,8 @@ def is_according_to_filter(filter, contour):
 
 
 def calculate_contours(window, contour_filter, toggle_contours):
-    global contours, distance
-    while True:
+    global contours, distance, running
+    while running:
         find_contours(toggle_contours)
         if contours is not None and len(contours) > 0:
             for index in range(len(contours)):
@@ -56,6 +58,7 @@ def calculate_contours(window, contour_filter, toggle_contours):
                     if coordinates is not None:
                         window.contour_centroid = coordinates
                         distance = get_distance_to_camera(contours[index], 34)
+    print("stopped calculating contours\n")
 
 
 def get_distance_to_camera(contour, real_width):
@@ -88,7 +91,6 @@ class Window:
     def __init__(self, size):
         self.contour_centroid = None
         self.size = size
-        print(size)
         self.display = pygame.display.set_mode(self.size, 0)
         pygame.display.set_caption('Image Processor')
         self.clock = pygame.time.Clock()
@@ -169,7 +171,7 @@ class Window:
 
 
 def main():
-    global image, mask, contours, distance
+    global image, mask, contours, distance, running
 
     receiving = threading.Thread(target=get_image)
     receiving.start()
@@ -179,7 +181,6 @@ def main():
 
     pygame.init()
     font = pygame.font.SysFont('Corbel', 20)
-    # info_object = pygame.display.Info()
     window = Window((1280, 650))
     window.add_camera_window(camera.IMAGE_WIDTH)
     window.add_camera_window(camera.IMAGE_WIDTH)
@@ -213,8 +214,10 @@ def main():
 
             if event.type == pygame.QUIT:
                 print("exiting game")
+                running = False
                 pygame.display.quit()
                 pygame.quit()
+                serv.close_connection()
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
