@@ -11,12 +11,17 @@ import server
 from buttons import BaseButton
 from utils import convert_rgb_hsv, is_collided_with_camera
 
-image = None
-mask = None
-distance = 0
-contours = []
-running = True
-serv = server.Server()
+image = None  # the image displayed on screen.
+mask = None  # the image after color filtration.
+distance = 0  # the distance of the contour from the camera.
+contours = []  # the contours found by open-cv, can contain background noises.
+running = True  # the variable responsible for stopping the program. when false the program will stop.
+serv = server.Server()  # the server is responsible for receiving the images and closing the program.
+
+"""
+the function is responsible for updating the global variable "image" according to the photos sent 
+from the client.
+"""
 
 
 def get_image():
@@ -24,6 +29,12 @@ def get_image():
     while running:
         message, image = serv.receive_image()
     print("stopped receiving")
+
+
+"""
+the function receives the area filter and a contour and checks
+if the contour's area is between the parameters the user set.
+"""
 
 
 def is_according_to_filter(filter, contour):
@@ -44,6 +55,14 @@ def is_according_to_filter(filter, contour):
     return False
 
 
+"""
+the function is responsible for handling the contours.
+it runs in a separated thread and calls the function 
+that are responsible for finding the contours, then find the one matching the filter and eventually
+calculate its distance to the camera.
+"""
+
+
 def calculate_contours(window, contour_filter, toggle_contours):
     global contours, distance, running
     while running:
@@ -61,8 +80,22 @@ def calculate_contours(window, contour_filter, toggle_contours):
     print("stopped calculating contours\n")
 
 
+"""
+returns the distance to the camera according to the contour's width
+"""
+
+
 def get_distance_to_camera(contour, real_width):
     return real_width * 1250.97996 / find_contour_width(contour) / 2
+
+
+"""
+the function is responsible for finding contours.
+the params in cv2.findContours define the array returned.
+RETR_EXTERNAL defines the hierarchy so only external points will be returned, thus saving memory.
+CHAIN_APPROX_SIMPLE sets the function to only return the necessary point for the contour. for example, if 
+the contour is shaped as a rectangle, only 4 points will be returned.
+"""
 
 
 def find_contours(toggle_button):
@@ -71,6 +104,13 @@ def find_contours(toggle_button):
         contours, h = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     else:
         distance = 0
+
+
+"""
+calculating the center of a contour in a certain moment.
+the calculation for a contour's center is relative to the image and therefore
+needs to be subtracted from the coordinates of the end of the mask.
+"""
 
 
 def find_contour_coordinates(mask_coordinates, moment):
