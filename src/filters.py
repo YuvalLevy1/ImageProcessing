@@ -91,8 +91,6 @@ class ContourFilter(Filter):
         super().__init__(x, y, "contour filter")
         self.add_slider(0, 5000, 250, "min area")
         self.add_slider(0, 10000, 250, "max area")
-        # self.add_slider(0, 1000, 250, "max width")
-        # self.add_slider(0, 250, 250, "min width")
 
     def get_max_value(self, text):
         for slider in self.sliders:
