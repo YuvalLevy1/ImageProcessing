@@ -69,8 +69,8 @@ def calculate_contours(window, contour_filter, toggle_contours):
         find_contours(toggle_contours)
         if contours is not None and len(contours) > 0:
             for index in range(len(contours)):
-                if find_contour_area(contours[index]) < 100:
-                    continue
+                if find_contour_area(contours[index]) < 100:  # if the area is under 100,
+                    continue  # it will be ignored because it's probably a noise.
                 if is_according_to_filter(contour_filter, contours[index]):
                     moment = cv2.moments(contours[index])
                     coordinates = find_contour_coordinates(window.image_locations[1], moment)
@@ -82,6 +82,7 @@ def calculate_contours(window, contour_filter, toggle_contours):
 
 """
 returns the distance to the camera according to the contour's width
+1250 is the focal length.
 """
 
 
@@ -216,8 +217,9 @@ def main():
     global image, mask, contours, distance, running
 
     receiving = threading.Thread(target=get_image)
-    receiving.start()
+    receiving.start()  # starting to receive images.
 
+    # waiting until connection is made and an image was received.
     while image is None:
         time.sleep(5)
 
@@ -227,6 +229,7 @@ def main():
     window.add_camera_window(camera.IMAGE_WIDTH)
     window.add_camera_window(camera.IMAGE_WIDTH)
 
+    # creating filters
     hsv_filter = filters.HSV_Filter(30, 510)
     window.add_filter(hsv_filter)
     contour_filter = filters.ContourFilter(200, 510)
@@ -235,60 +238,71 @@ def main():
     toggle_contours = BaseButton(1000, 550, 160, 50, (100, 100, 100), "toggle contours")
     window.add_button(toggle_contours)
 
+    # starting the thread that is responsible for handling contour.
     contours_thread = threading.Thread(target=calculate_contours, args=[window, contour_filter, toggle_contours])
     contours_thread.start()
 
     while True:
+
+        # setting the colors to the mask according to the filter.
         lower_color = hsv_filter.get_lower_color()
         upper_color = hsv_filter.get_upper_color()
 
         pygame.display.update()
         window.display.fill((255, 255, 255))
-        window.clock.tick(30)
+        window.clock.tick(60)
 
         window.draw_all_filters()
         window.draw_all_buttons()
 
+        # creating the mask
         mask = cv2.inRange(camera.convert_bgr2hsv(image), lower_color, upper_color)
         window.draw_all_images([camera.convert_bgr2rgb(image), camera.convert_bgr2rgb(mask)])
 
         for event in pygame.event.get():
 
+            # handling the end of the program after the window was closed
             if event.type == pygame.QUIT:
                 print("exiting game")
-                running = False
+                running = False  # turning all threads off
                 pygame.display.quit()
-                pygame.quit()
-                serv.close_connection()
+                pygame.quit()  # turning pygame off
+                serv.close_connection()  # telling the client to shut down
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                # checking if a slider is held.
                 for slider in window.get_sliders():
                     if slider.is_mouse_on_circle(pygame.mouse.get_pos()):
                         slider.held = True
-
+                # checking if the user pressed the image in order to set the hsv filter.
                 if is_collided_with_camera((window.image_locations[0], 0), pygame.mouse.get_pos()):
                     window.get_filter("hsv"). \
                         change_hsv_values(window.get_image_color(pygame.mouse.get_pos()))
 
+                # checking if a button was pressed.
                 for button in window.buttons:
                     if button.is_mouse_on_button(pygame.mouse.get_pos()):
                         button.toggle = not button.toggle
                         print("toggling button")
 
+            # making sure all sliders are no longer held when mouse button is released.
             if event.type == pygame.MOUSEBUTTONUP:
                 for slider in window.get_sliders():
                     slider.held = False
 
+        # moving the circle in each slider according to mouse.
         for slider in window.get_sliders():
             slider.move_circle(pygame.mouse.get_pos()[0])
 
+        # drawing a dot in the middle of the contour.
         if window.contour_centroid is not None and toggle_contours.is_pressed():
             pygame.draw.circle(window.display, (70, 150, 70),
                                window.contour_centroid,
                                5)
             window.contour_centroid = None
 
+        # displaying the distance.
         rendered_distance = font.render(str(distance), True, (0, 0, 0))
         window.display.blit(rendered_distance, (1200, 565))
 
