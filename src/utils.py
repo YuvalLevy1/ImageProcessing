@@ -8,6 +8,7 @@ def convert_rgb_hsv(rgb):
     return cv2.cvtColor(np.uint8([[rgb]]), cv2.COLOR_RGB2HSV)
 
 
+# checks if mouse is between the borders of the camera image.
 def is_collided_with_camera(camera_coordinates, coordinates):
     return camera_coordinates[0] <= coordinates[0] <= camera_coordinates[0] + camera.IMAGE_WIDTH \
            and camera_coordinates[1] <= coordinates[1] <= camera_coordinates[1] + camera.IMAGE_LENGTH
