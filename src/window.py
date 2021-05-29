@@ -66,9 +66,11 @@ def get_distance_to_camera(contour, real_width):
 
 
 def find_contours(toggle_button):
-    global contours, mask
+    global contours, mask, distance
     if mask is not None and toggle_button.is_pressed():
         contours, h = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    else:
+        distance = 0
 
 
 def find_contour_coordinates(mask_coordinates, moment):
@@ -241,10 +243,12 @@ def main():
         for slider in window.get_sliders():
             slider.move_circle(pygame.mouse.get_pos()[0])
 
-        if window.contour_centroid is not None:
+        if window.contour_centroid is not None and toggle_contours.is_pressed():
             pygame.draw.circle(window.display, (70, 150, 70),
                                window.contour_centroid,
                                5)
+            window.contour_centroid = None
+
         rendered_distance = font.render(str(distance), True, (0, 0, 0))
         window.display.blit(rendered_distance, (1200, 565))
 
